@@ -97,7 +97,7 @@ export default class Game {
     addPlayer(socket) {
         this.socket = socket;
         this.player = new Player(this.scene, this.socket, true);
-        this.player.initCharModel();
+        this.player.initCharModel(new BABYLON.Vector3(this.randomNumber(-25, 25), 0, this.randomNumber(-25, 25)));
     }
 
     async addOtherPlayer(pos) {
@@ -107,4 +107,12 @@ export default class Game {
         this.otherPlayers.push(other);
         return other;
     }
+
+    randomNumber(min, max) {
+        if (min == max) {
+            return (min);
+        }
+        var random = Math.random();
+        return ((random * (max - min)) + min);
+    };
 }

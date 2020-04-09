@@ -18,7 +18,11 @@ export default class Player {
         this.skeleton = importedModel.skeletons[0];
         this.player = importedModel.meshes[0];
         this.player.scaling = new BABYLON.Vector3(5, 5, 5);
-        this.player.checkCollisions = false;
+
+        // Collisions!
+        this.player.checkCollisions = true;
+        this.player.ellipsoid = new BABYLON.Vector3(0.5, 1.0, 0.5);
+        this.player.ellipsoidOffset = new BABYLON.Vector3(0, 1.0, 0);
 
         if (this.me) this.scene.activeCamera.lockedTarget = this.player;
         if (position) this.player.position = new BABYLON.Vector3(position.x, position.y, position.z);
@@ -67,14 +71,6 @@ export default class Player {
                 // }
 
                 this.player.moveWithCollisions(moveVector);
-
-                // if (this.socket){
-                //     this.socket.emit('player movement', {
-                //         id : this.socket.id,
-                //         position: this.player.position
-                //     });
-                // }
-
                 this.isMoving = true;
             } else {
                 // Arrived
