@@ -8,6 +8,7 @@ export default class Game {
         const canvas = document.getElementById(canvasId);
         this.engine = new BABYLON.Engine(canvas, true);
         this.scene = new BABYLON.Scene(this.engine);
+        this.otherPlayers = [];
 
         BABYLON.SceneLoader.Append('', `data:${JSON.stringify(mesh.scene)}`, this.scene, scene => {
             this.scene.activeCamera.attachControl(canvas, true);
@@ -50,7 +51,14 @@ export default class Game {
             if (pickResult.hit) {
                 // Only allow the ground
                 if (pickResult.pickedMesh.id === "myGround") {
-                    this.player.addDestination(pickResult);
+                    this.player.addDestination(pickResult.pickedPoint.clone());
+
+                    if (this.socket){
+                        this.socket.emit('player movement', {
+                            id : this.socket.id,
+                            position: pickResult.pickedPoint.clone()
+                        });
+                    }
                 }
             }
         };
@@ -68,6 +76,10 @@ export default class Game {
             if (this.scene.isReady()) {
                 if (this.player) {
                     this.player.move();
+                }
+
+                for (let o of this.otherPlayers){
+                    o.move();
                 }
             }
         });
@@ -92,6 +104,7 @@ export default class Game {
         let other = new Player(this.scene, this.socket);
         let m = await other.initCharModel(pos);
         console.log(m);
-        return m;
+        this.otherPlayers.push(other);
+        return other;
     }
 }

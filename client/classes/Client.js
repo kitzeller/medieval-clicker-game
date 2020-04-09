@@ -31,18 +31,23 @@ export default class Client {
         });
 
         socket.on('other player movement', function (msg) {
-            others[msg.id].mesh.position = msg.position;
+            others[msg.id].player.addDestination(msg.position);
         });
 
         socket.on('disconnect', function (msg) {
-            console.log(others[msg])
-            others[msg].mesh.dispose();
-            delete others[msg];
+            console.log(others[msg]);
+            if (others[msg]){
+                others[msg].mesh.dispose();
+                delete others[msg];
+            }
         });
 
         socket.on('newPlayer', async function (msg) {
             others[msg.playerId] = msg;
-            others[msg.playerId].mesh = await game.addOtherPlayer();
+
+            let playerObj = await game.addOtherPlayer();
+            others[msg.playerId].player = playerObj;
+            others[msg.playerId].mesh = playerObj.player;
         });
 
         socket.on('currentPlayers',  function (players) {
@@ -50,11 +55,11 @@ export default class Client {
             others = players;
             Object.keys(players).forEach(async function (id) {
                 if (players[id].playerId === socket.id) {
-                    // TODO....
-                    // addPlayer(self, players[id]);
+                    // TODO: Nothing?
                 } else {
-                    players[id].mesh = await game.addOtherPlayer(players[id].position);
-                    // addOtherPlayers(self, players[id]);
+                    let playerObj = await game.addOtherPlayer(players[id].position);
+                    players[id].player = playerObj;
+                    players[id].mesh = playerObj.player;
                 }
             });
             $('#messages').append($('<li>').text((Object.keys(players).length - 1) + " player(s) are in the game."));

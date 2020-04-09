@@ -6,6 +6,7 @@ export default class Player {
         this.scene = scene;
         this.socket = socket;
         this.me = !!main;
+        this.isMoving = false;
 
         return this;
     }
@@ -20,7 +21,7 @@ export default class Player {
         this.player.checkCollisions = false;
 
         if (this.me) this.scene.activeCamera.lockedTarget = this.player;
-        if (position) this.player.position = position;
+        if (position) this.player.position = new BABYLON.Vector3(position.x, position.y, position.z);
 
         // ROBOT
         this.skeleton.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
@@ -38,27 +39,18 @@ export default class Player {
         return this.player;
     }
 
-    addDestination(pickResult){
-        this.player.destination = pickResult.pickedPoint.clone();
-        this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
+    addDestination(point){
+        this.player.destination = new BABYLON.Vector3(point.x, point.y, point.z);
+
+
+        if (!this.isMoving){
+            this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
+        }
+
         this.player.lookAt(this.player.destination);
         this.player.rotation.x = 0;
         this.player.rotation.z = 0;
 
-        // Decal
-        // var decalMaterial = new BABYLON.StandardMaterial("decalMat", this.scene);
-        // decalMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/impact.png", this.scene);
-        // decalMaterial.diffuseTexture.hasAlpha = true;
-        // decalMaterial.zOffset = -2;
-        // var decalSize = new BABYLON.Vector3(10, 10, 10);
-        // var newDecal = BABYLON.Mesh.CreateDecal("decal", pickResult.pickedMesh, pickResult.pickedPoint, pickResult.getNormal(true), decalSize);
-        // newDecal.material = decalMaterial;
-        // this.player.addRotation(0, Math.PI, 0);
-        // var path = BABYLON.Mesh.CreateLines("lines", [
-        //     this.player.position,
-        //     this.player.destination
-        // ], this.scene);
-        // path.color = new BABYLON.Color3(0, 0, 1);
     }
 
     move(){
@@ -69,19 +61,24 @@ export default class Player {
                 moveVector.y = -0.01;
                 moveVector = moveVector.normalize();
                 moveVector = moveVector.scale(0.2);
+
                 // if(meshFound.distance > 1.1){
                 //     moveVector.y = GRAVITY;
                 // }
+
                 this.player.moveWithCollisions(moveVector);
 
-                if (this.socket){
-                    this.socket.emit('player movement', {
-                        id : this.socket.id,
-                        position: this.player.position
-                    });
-                }
+                // if (this.socket){
+                //     this.socket.emit('player movement', {
+                //         id : this.socket.id,
+                //         position: this.player.position
+                //     });
+                // }
+
+                this.isMoving = true;
             } else {
                 // Arrived
+                this.isMoving = false;
                 if (this.idleRange) this.scene.beginAnimation(this.skeleton, this.idleRange.from, this.idleRange.to, true);
                 this.player.destination = null;
             }
