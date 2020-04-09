@@ -15,3 +15,4 @@ A medieval clicker game (MMORPG) using Babylon.js and Socket.io
 - [ ] NPC AI
 - [ ] Player vs. Monster Combat
 - [ ] Player vs. Player Combat
+- [ ] Sword Slash Animation

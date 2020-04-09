@@ -14,10 +14,10 @@ export default class Client {
             $('#messages').append($('<li>').text('Welcome to a Medieval clicker game!'));
         });
 
-        socket.on('scene', function (mesh) {
+        socket.on('scene', async function (mesh) {
             game = new Game('gameCanvas', mesh);
             // Add self
-            game.addPlayer(socket);
+            await game.addPlayer(socket, mesh.initPos);
         });
 
         $('form').submit(function (e) {
@@ -45,7 +45,7 @@ export default class Client {
         socket.on('newPlayer', async function (msg) {
             others[msg.playerId] = msg;
 
-            let playerObj = await game.addOtherPlayer();
+            let playerObj = await game.addOtherPlayer(msg.position);
             others[msg.playerId].player = playerObj;
             others[msg.playerId].mesh = playerObj.player;
         });

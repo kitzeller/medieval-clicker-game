@@ -27,11 +27,13 @@ io.on('connection', function (socket) {
     socket.nickname = generateName();
     players[socket.id] = {
         playerId: socket.id,
-        nickname: socket.nickname
+        nickname: socket.nickname,
+        position: {x: getRandomInt(-25, 25), y: 0, z: getRandomInt(-25, 25)}
     };
 
     socket.emit('scene', {
         scene: BABYLON.SceneSerializer.Serialize(GAME.scene),
+        initPos: players[socket.id].position
     });
 
     // send the players object to the new player

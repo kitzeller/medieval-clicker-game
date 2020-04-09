@@ -1,4 +1,5 @@
 import * as BABYLON from 'babylonjs';
+import 'babylonjs-inspector';
 import Player from './Player';
 
 export default class Game {
@@ -13,6 +14,7 @@ export default class Game {
         BABYLON.SceneLoader.Append('', `data:${JSON.stringify(mesh.scene)}`, this.scene, scene => {
             this.scene.activeCamera.attachControl(canvas, true);
             new BABYLON.Layer('background', 'assets/textures/background.jpg', this.scene, true);
+            // this.scene.debugLayer.show();
 
 
             // Mini Map
@@ -94,10 +96,10 @@ export default class Game {
 
     }
 
-    addPlayer(socket) {
+    async addPlayer(socket, pos) {
         this.socket = socket;
         this.player = new Player(this.scene, this.socket, true);
-        this.player.initCharModel(new BABYLON.Vector3(this.randomNumber(-25, 25), 0, this.randomNumber(-25, 25)));
+        await this.player.initCharModel(new BABYLON.Vector3(pos.x, 0, pos.z));
     }
 
     async addOtherPlayer(pos) {

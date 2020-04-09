@@ -1,4 +1,5 @@
 import * as BABYLON from 'babylonjs';
+import 'babylonjs-loaders';
 
 export default class Player {
     constructor(scene, socket, main) {
@@ -39,6 +40,13 @@ export default class Player {
 
         // IDLE
         if (this.idleRange) this.scene.beginAnimation(this.skeleton, this.idleRange.from, this.idleRange.to, true);
+
+        // WEAPON TEST
+        // https://sketchfab.com/3d-models/a-heros-blade-c31f2eeb93f345b1a5677a4426901d46
+        let weapon = await BABYLON.SceneLoader.ImportMeshAsync("", "assets/meshes/a_heros_blade/", "scene.gltf", this.scene);
+        let weaponMesh = weapon.meshes[0];
+        weaponMesh.scaling = new BABYLON.Vector3(0.00025, 0.00025, 0.00025);
+        weaponMesh.attachToBone(this.skeleton.bones[38], this.player);
 
         return this.player;
     }
