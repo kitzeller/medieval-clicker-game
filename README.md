@@ -1,1 +1,1 @@
-# A Medival Clicker Game
+# A Medieval Clicker Game
