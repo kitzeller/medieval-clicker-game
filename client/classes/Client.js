@@ -4,7 +4,7 @@ import Game from './Game';
 
 export default class Client {
     constructor() {
-        const socket = io.connect(process.env.HOST);
+        const socket = io.connect(window.location.host);
 
         var game;
         var others = {};
