@@ -1,4 +1,5 @@
 const Rock = require("./Rock.js");
+const Tree = require("./Tree.js");
 
 const Game = function () {
 
@@ -50,10 +51,15 @@ const Game = function () {
 
         // TODO: Populate world...
 
-        for (let i = 0; i < 100; i++){
+        for (let i = 0; i < 100; i++) {
+            // TODO: Replace with generators
             let rock = new Rock(getRandomInt(1, 20), this.scene);
             rock.position.x = getRandomInt(-1000, 1000);
             rock.position.z = getRandomInt(-1000, 1000);
+
+            let tree = new Tree(getRandomInt(15, 25), getRandomInt(10, 30), getRandomInt(2, 5), this.scene, null);
+            tree.position.x = getRandomInt(-1000, 1000);
+            tree.position.z = getRandomInt(-1000, 1000);
         }
 
     }
