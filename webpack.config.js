@@ -1,5 +1,4 @@
 const path = require("path");
-const Dotenv = require('dotenv-webpack');
 
 module.exports = {
     entry: "./client/index.js",
@@ -8,8 +7,5 @@ module.exports = {
         filename: "bundle.js"
     },
     devtool: 'source-map',
-    mode: "development",
-    plugins: [
-        new Dotenv()
-    ]
+    mode: "development"
 };

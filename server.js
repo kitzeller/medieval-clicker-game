@@ -5,6 +5,7 @@ const io = require('socket.io').listen(server);
 const path = require('path');
 const BABYLON = require('babylonjs');
 const Game = require("./server/Game.js");
+require('dotenv').config();
 
 const PORT = process.env.PORT || 8080;
 
