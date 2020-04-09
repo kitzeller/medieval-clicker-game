@@ -15,12 +15,12 @@ export default class Game {
 
 
             // Mini Map
-            this.camera2 = new BABYLON.ArcRotateCamera("Camera", -Math.PI/2, 0.001, 50, BABYLON.Vector3.Zero(), this.scene);
-            this.camera2.attachControl(canvas, true);
-            this.camera2.layerMask = 2;
+            this.miniMapCamera = new BABYLON.ArcRotateCamera("Camera", -Math.PI/2, 0.001, 50, BABYLON.Vector3.Zero(), this.scene);
+            this.miniMapCamera.attachControl(canvas, true);
+            this.miniMapCamera.layerMask = 2;
             var rt2 = new BABYLON.RenderTargetTexture("depth", 1024, this.scene, true, true);
             this.scene.customRenderTargets.push(rt2);
-            rt2.activeCamera = this.camera2;
+            rt2.activeCamera = this.miniMapCamera;
             rt2.renderList = this.scene.meshes;
 
             var miniMap = BABYLON.Mesh.CreatePlane("plane", 5, this.scene);
@@ -47,12 +47,29 @@ export default class Game {
         });
 
         this.scene.onPointerDown = (event, pickResult) => {
-
+            if (pickResult.hit) {
+                // Only allow the ground
+                if (pickResult.pickedMesh.id === "myGround") {
+                    this.player.addDestination(pickResult);
+                }
+            }
         };
 
         this.scene.registerBeforeRender(() => {
-            this.camera2.alpha = this.scene.activeCamera.alpha;
+            this.miniMapCamera.alpha = this.scene.activeCamera.alpha;
+            if (this.player) {
+                if (this.player.player) {
 
+                    // Minimap to follow Player
+                    this.miniMapCamera.lockedTarget = new BABYLON.Vector3(this.player.player.position.x, 50, this.player.player.position.z)
+                }
+            }
+
+            if (this.scene.isReady()) {
+                if (this.player) {
+                    this.player.move();
+                }
+            }
         });
 
 

@@ -45,18 +45,15 @@ export default class Player {
         this.player.rotation.x = 0;
         this.player.rotation.z = 0;
 
-
         // Decal
-        var decalMaterial = new BABYLON.StandardMaterial("decalMat", this.scene);
-        decalMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/impact.png", this.scene);
-        decalMaterial.diffuseTexture.hasAlpha = true;
-        decalMaterial.zOffset = -2;
-        var decalSize = new BABYLON.Vector3(10, 10, 10);
-        var newDecal = BABYLON.Mesh.CreateDecal("decal", pickResult.pickedMesh, pickResult.pickedPoint, pickResult.getNormal(true), decalSize);
-        newDecal.material = decalMaterial;
-
+        // var decalMaterial = new BABYLON.StandardMaterial("decalMat", this.scene);
+        // decalMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/impact.png", this.scene);
+        // decalMaterial.diffuseTexture.hasAlpha = true;
+        // decalMaterial.zOffset = -2;
+        // var decalSize = new BABYLON.Vector3(10, 10, 10);
+        // var newDecal = BABYLON.Mesh.CreateDecal("decal", pickResult.pickedMesh, pickResult.pickedPoint, pickResult.getNormal(true), decalSize);
+        // newDecal.material = decalMaterial;
         // this.player.addRotation(0, Math.PI, 0);
-
         // var path = BABYLON.Mesh.CreateLines("lines", [
         //     this.player.position,
         //     this.player.destination

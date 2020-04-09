@@ -71,7 +71,11 @@ server.listen(PORT, function () {
     console.log(`Listening on ${PORT}`);
 });
 
-// https://gist.github.com/tkon99/4c98af713acc73bed74c
+
+/**
+ * Random Name Generator
+ * https://gist.github.com/tkon99/4c98af713acc73bed74c
+ */
 function capFirst(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
