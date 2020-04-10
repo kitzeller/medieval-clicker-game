@@ -84,6 +84,11 @@ Tree = function (sizeBranch, sizeTrunk, radius, scene, sd) {
     leaves.parent = tree;
     trunk.parent = tree;
 
+    tree.metadata = {
+        "canDestroy": true,
+        "type": "tree"
+    };
+
     return tree;
 };
 

@@ -4,6 +4,7 @@ import Player from './Player';
 import MiniMap from "./MiniMap";
 import FoxGenerator from "./FoxGenerator";
 import * as GUI from "babylonjs-gui";
+import PanelMenu from "./PanelMenu";
 
 
 export default class Game {
@@ -11,11 +12,12 @@ export default class Game {
     constructor(canvasId, mesh) {
         // get element from html file.
         const canvas = document.getElementById(canvasId);
-        this.engine = new BABYLON.Engine(canvas, true, { stencil: true });
+        this.engine = new BABYLON.Engine(canvas, true, {stencil: true});
         this.scene = new BABYLON.Scene(this.engine);
         this.otherPlayers = [];
         this.debug = false;
         this.hud = this.hudManager();
+        this.ctx = null;
 
         BABYLON.SceneLoader.Append('', `data:${JSON.stringify(mesh.scene)}`, this.scene, scene => {
             this.scene.activeCamera.attachControl(canvas, true);
@@ -37,8 +39,8 @@ export default class Game {
                 this.player.punch();
             }
 
-            if (event.key === "Enter" && event.shiftKey){
-                if (!this.debug){
+            if (event.key === "Enter" && event.shiftKey) {
+                if (!this.debug) {
                     this.debug = true;
                     this.scene.debugLayer.show();
                 } else {
@@ -48,9 +50,50 @@ export default class Game {
             }
         });
 
-        this.scene.onPointerDown = (event, pickResult) => {
 
-            if (event.shiftKey){
+        // Right Click
+        window.addEventListener('contextmenu', event => {
+            // We try to pick an object
+            var pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
+
+            if (pickResult.hit) {
+
+                // Check distance
+                // if (BABYLON.Vector3.Distance(pickResult.pickedPoint, this.player.player.position) < 10) {
+                //     // Attack
+                //     this.player.attack();
+                // } else {
+                //     // Walk to it
+                //     this.player.addDestination(pickResult.pickedPoint.clone());
+                // }
+
+
+                // Open ContextMenu
+                if (this.ctx) {
+                    this.ctx.remove();
+                }
+                this.ctx = getContextMenu(this.scene, pickResult, this.player, this.advancedTexture);
+                this.ctx.addTo(this.advancedTexture);
+                event.preventDefault();
+            } else {
+                if (this.ctx) {
+                    this.ctx.remove();
+                }
+            }
+
+
+        });
+
+
+        // Left Click
+        this.scene.onPointerDown = (event, pickResult) => {
+            if (event.which === 3) return;
+
+            if (this.ctx) {
+                this.ctx.remove();
+            }
+
+            if (event.shiftKey) {
                 // TODO: Stop moving...
                 this.player.attack();
                 return;
@@ -61,9 +104,9 @@ export default class Game {
                 if (pickResult.pickedMesh.id === "myGround") {
                     this.player.addDestination(pickResult.pickedPoint.clone());
 
-                    if (this.socket){
+                    if (this.socket) {
                         this.socket.emit('player movement', {
-                            id : this.socket.id,
+                            id: this.socket.id,
                             position: pickResult.pickedPoint.clone()
                         });
                     }
@@ -88,7 +131,7 @@ export default class Game {
                     this.player.move();
                 }
 
-                for (let o of this.otherPlayers){
+                for (let o of this.otherPlayers) {
                     o.move();
                 }
             }
@@ -118,7 +161,7 @@ export default class Game {
         return other;
     }
 
-    hudManager(){
+    hudManager() {
         // GUI setup
         this.advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
         var hudComponents = [];
@@ -160,3 +203,29 @@ export default class Game {
         return ((random * (max - min)) + min);
     };
 }
+
+// https://pastebin.com/raw/1zp6fyb4
+var getContextMenu = function (scene, pickResult, player, at) {
+    // Depending on what is hit, make a new type of context menu
+    // pass in functions for options
+    console.log(pickResult.pickedMesh);
+    if (pickResult.pickedMesh.parent){
+        // Check this...
+        pickResult.pickedMesh = pickResult.pickedMesh.parent;
+    }
+
+    if (pickResult.pickedMesh.id === "myGround") {
+        return new PanelMenu(['Walk Here'], [], scene.pointerX, scene.pointerY, pickResult, player, at);
+    } else if (pickResult.pickedMesh.metadata.canDestroy){
+        return new PanelMenu(['Destroy'], [], scene.pointerX, scene.pointerY, pickResult, player, at);
+    } else {
+        return new PanelMenu(['Kill', 'Shoo', 'Inspect', 'Walk Here'], [], scene.pointerX, scene.pointerY, pickResult, player, at);
+    }
+
+    // let menu1 = new PanelMenu(['SPARTA!']);
+    // let menu2 = new PanelMenu(['is.'], [menu1]);
+    // let menu4 = new PanelMenu([';)']);
+    // let menu3 = new PanelMenu(['is', 'afraid', 'of', 'the', 'big', 'bad', 'wolf'], [0,0,0,menu4]);
+    // return new PanelMenu(['This.', 'Are', 'Who'], [menu2, undefined, menu3], scene.pointerX, scene.pointerY);
+};
+

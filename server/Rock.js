@@ -74,6 +74,11 @@ const Rock = function (size, scene) {
     rock.isPickable = true;
     rock.checkCollisions = true;
 
+    rock.metadata = {
+        "canDestroy": true,
+        "type": "rock"
+    };
+
     return rock;
 };
 

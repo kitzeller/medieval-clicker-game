@@ -65,12 +65,15 @@ export default class Player {
             this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
         }
 
-        this.player.lookAt(this.player.destination);
+        this.lookAt(this.player.destination);
+    }
+
+    lookAt(destination){
+        this.player.lookAt(destination);
         // Mesh rotation is sligtly off.. need to rotate 180
         this.player.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI, BABYLON.Space.WORLD);
         this.player.rotation.x = 0;
         this.player.rotation.z = 0;
-
     }
 
     punch(){
@@ -84,6 +87,8 @@ export default class Player {
     }
 
     attack(){
+        // Check distance, lookAt, stop running
+        // Get target
         this.scene.beginAnimation(this.skeleton, this.swordRange.from, this.swordRange.to, false);
     }
 
