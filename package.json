@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/kitzeller/medival-clicker-game#readme",
   "dependencies": {
+    "@babylonjs/core": "^4.1.0",
     "babylonjs": "^4.1.0",
     "babylonjs-gui": "^4.1.0",
     "babylonjs-inspector": "^4.1.0",
