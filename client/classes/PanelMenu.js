@@ -1,4 +1,5 @@
 import GUI from "./GUI";
+import {ResourceMesh} from "./ResourceMesh";
 
 export default class PanelMenu extends GUI {
     constructor(options, subMenus = [], x = 0, y = 0, pickResult, player, at, transparentBackground = false) {
@@ -86,23 +87,35 @@ export default class PanelMenu extends GUI {
                     case "Inspect":
                         alert("Something!");
                         break;
-                    case "Kill":
-                        alert("Kill");
+                    case "Attack":
+                        this.player.attack();
+
+                        // if (BABYLON.Vector3.Distance(pickResult.pickedPoint, this.player.player.position) < 10) {
+                        //     // Attack
+                        //     this.player.attack();
+                        // }
                         break;
                     case "Walk Here":
                         this.player.addDestination(this.pickResult.pickedPoint.clone());
                         break;
                     case "Destroy":
+                        // Check that distance is close enough
                         let slider = new BABYLON.GUI.Slider();
                         this.advancedTexture.addControl(slider);
                         slider.minimum = 0;
-                        slider.maximum = 50;
+                        slider.maximum = 100;
                         slider.value = 0;
                         slider.height = "20px";
                         slider.width = "100px";
                         slider.background = "red";
                         slider.color = "green";
                         slider.linkWithMesh(this.pickResult.pickedMesh);
+
+                        this.pickResult.pickedMesh.destroyParticles = ResourceMesh.createDestroyParticles(this.pickResult.pickedMesh);
+
+                        this.player.meshToDestroy = this.pickResult.pickedMesh;
+                        this.player.meshToDestroySlider = slider;
+
                         break;
                 }
 

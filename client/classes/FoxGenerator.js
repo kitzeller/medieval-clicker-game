@@ -36,9 +36,11 @@ export default class FoxGenerator {
                 newMeshes[0].ellipsoid = new BABYLON.Vector3(1.0, 1.0, 1.0);
                 newMeshes[0].type = "fox";
 
-                newMeshes[1].parent = newMeshes[0];
+                // newMeshes[1].parent = newMeshes[0];
                 newMeshes[1].type = "fox";
                 newMeshes[0].isPickable = true;
+                newMeshes[1].isPickable = true;
+
                 newMeshes[0].healthBar = this.HUD(newMeshes[0]);
 
 

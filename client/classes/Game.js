@@ -67,6 +67,7 @@ export default class Game {
                 //     this.player.addDestination(pickResult.pickedPoint.clone());
                 // }
 
+                // this.outlineMesh(pickResult.pickedMesh);
 
                 // Open ContextMenu
                 if (this.ctx) {
@@ -100,6 +101,7 @@ export default class Game {
             }
 
             if (pickResult.hit) {
+
                 // Only allow the ground
                 if (pickResult.pickedMesh.id === "myGround") {
                     this.player.addDestination(pickResult.pickedPoint.clone());
@@ -110,6 +112,9 @@ export default class Game {
                             position: pickResult.pickedPoint.clone()
                         });
                     }
+                } else {
+                    // Dont outline ground
+                    this.outlineMesh(pickResult.pickedMesh);
                 }
             }
 
@@ -143,6 +148,8 @@ export default class Game {
             if (this.scene) {
                 this.scene.render();
             }
+
+            this.player.checkMeshToDestroy();
         });
 
     }
@@ -194,6 +201,12 @@ export default class Game {
         return hudComponents;
     }
 
+    outlineMesh(mesh){
+        // Outline
+        mesh.outlineColor = new BABYLON.Color3(0.3, 0, 0);
+        mesh.outlineWidth = 1;
+        mesh.renderOutline = true;
+    }
 
     randomNumber(min, max) {
         if (min == max) {
@@ -219,7 +232,9 @@ var getContextMenu = function (scene, pickResult, player, at) {
     } else if (pickResult.pickedMesh.metadata.canDestroy){
         return new PanelMenu(['Destroy'], [], scene.pointerX, scene.pointerY, pickResult, player, at);
     } else {
-        return new PanelMenu(['Kill', 'Shoo', 'Inspect', 'Walk Here'], [], scene.pointerX, scene.pointerY, pickResult, player, at);
+        return new PanelMenu(['Attack'], [], scene.pointerX, scene.pointerY, pickResult, player, at);
+
+        // return new PanelMenu(['Kill', 'Shoo', 'Inspect', 'Walk Here'], [], scene.pointerX, scene.pointerY, pickResult, player, at);
     }
 
     // let menu1 = new PanelMenu(['SPARTA!']);

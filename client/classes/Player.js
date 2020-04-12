@@ -9,14 +9,18 @@ export default class Player {
         this.me = !!main;
         this.isMoving = false;
 
+        this.meshToDestroy = null;
+        this.meshToDestroySlider = null;
+
+
         return this;
     }
 
-    async initCharModel(position){
+    async initCharModel(position) {
         let importedModel = await BABYLON.SceneLoader.ImportMeshAsync("", "assets/meshes/", "DummyColor.babylon", this.scene);
 
         this.skeleton = importedModel.skeletons[0];
-        this.player =  new BABYLON.Mesh("player", this.scene);
+        this.player = new BABYLON.Mesh("player", this.scene);
         importedModel.meshes[0].parent = this.player;
         importedModel.meshes[1].parent = this.player;
 
@@ -57,18 +61,18 @@ export default class Player {
         return this.player;
     }
 
-    addDestination(point){
+    addDestination(point) {
         this.player.destination = new BABYLON.Vector3(point.x, point.y, point.z);
 
 
-        if (!this.isMoving){
+        if (!this.isMoving) {
             this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
         }
 
         this.lookAt(this.player.destination);
     }
 
-    lookAt(destination){
+    lookAt(destination) {
         this.player.lookAt(destination);
         // Mesh rotation is sligtly off.. need to rotate 180
         this.player.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI, BABYLON.Space.WORLD);
@@ -76,24 +80,47 @@ export default class Player {
         this.player.rotation.z = 0;
     }
 
-    punch(){
+    punch() {
         // TODO: Idle after done.. animation weights...
         this.scene.beginAnimation(this.skeleton, this.punchRange.from, this.punchRange.to, false);
     }
 
-    jump(){
+    jump() {
         // TODO: Idle after done.. animation weights...
         this.scene.beginAnimation(this.skeleton, this.jumpRange.from, this.jumpRange.to, false);
     }
 
-    attack(){
+    attack() {
         // Check distance, lookAt, stop running
         // Get target
         this.scene.beginAnimation(this.skeleton, this.swordRange.from, this.swordRange.to, false);
     }
 
-    move(){
+    checkMeshToDestroy() {
+        if (this.meshToDestroy) {
+            this.meshToDestroySlider.value += 0.1;
+            if (this.meshToDestroySlider.value < 50) {
+                // ....
+            }
+        }
+    }
+
+    cancelDestroy() {
+        if (this.meshToDestroy) {
+            if (this.meshToDestroy.destroyParticles) this.meshToDestroy.destroyParticles.stop();
+        }
+
+        this.meshToDestroy = null;
+
+        if (this.meshToDestroySlider) this.meshToDestroySlider.dispose();
+        this.meshToDestroySlider = null;
+    }
+
+    move() {
         if (this.player.destination) {
+            // Cancel
+            this.cancelDestroy();
+
             var moveVector = this.player.destination.subtract(this.player.position);
 
             if (moveVector.length() > 1.1) {

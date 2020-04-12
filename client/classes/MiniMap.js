@@ -26,10 +26,6 @@ export default class MiniMap {
         miniMap.parent = this.scene.activeCamera;
         miniMap.layerMask = 1;
 
-        // miniMap.enableEdgesRendering();
-        // miniMap.edgesWidth = 5.0;
-        // miniMap.edgesColor = new BABYLON.Color4(1, 1, 1, 1);
-
         return this;
     }
 
