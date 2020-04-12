@@ -58,6 +58,10 @@ io.on('connection', function (socket) {
         socket.broadcast.emit('other player movement', msg);
     });
 
+    socket.on('player run', function (msg) {
+        socket.broadcast.emit('other player run', msg);
+    });
+
     // when a player disconnects, remove them from our players object
     socket.on('disconnect', function () {
         console.log('user disconnected');

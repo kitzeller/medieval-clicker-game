@@ -1,18 +1,28 @@
 import * as BABYLON from 'babylonjs';
+import * as GUI from "babylonjs-gui";
 import 'babylonjs-loaders';
 import {Inventory} from "./Inventory";
+import {ResourceMesh} from "./ResourceMesh";
 
 export default class Player {
-    constructor(scene, socket, main) {
+    constructor(scene, socket, at, main) {
         var self = this;
         this.scene = scene;
         this.socket = socket;
         this.me = !!main;
         this.isMoving = false;
+        this.isRunning = false;
+
+        this.health = 20;
+        this.energy = 20;
+
         this.inventory = new Inventory();
 
+        this.advancedTexture = at;
         this.meshToDestroy = null;
         this.meshToDestroySlider = null;
+
+        this.speed = 1.5;
 
 
         return this;
@@ -64,11 +74,24 @@ export default class Player {
     }
 
     addDestination(point) {
+
+        // Authorize with server
+        if (this.socket && this.me) {
+            this.socket.emit('player movement', {
+                id: this.socket.id,
+                position: point
+            });
+        }
+
         this.player.destination = new BABYLON.Vector3(point.x, 0, point.z);
         this.lookAtPoint(this.player.destination);
 
         if (!this.isMoving) {
-            this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
+            if (!this.isRunning){
+                this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
+            } else {
+                this.scene.beginAnimation(this.skeleton, this.runRange.from, this.runRange.to, true);
+            }
         }
 
     }
@@ -96,6 +119,33 @@ export default class Player {
         // Check distance, lookAt, stop running
         // Get target
         this.scene.beginAnimation(this.skeleton, this.swordRange.from, this.swordRange.to, false);
+    }
+
+    toggleRun(){
+        // Authorize with server
+        if (this.socket && this.me) {
+            this.socket.emit('player run', {
+                id: this.socket.id,
+            });
+        }
+
+        if (this.isRunning){
+            this.isRunning = false;
+            this.speed = 1.5;
+            if (this.isMoving) this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
+        } else {
+            this.isRunning = true;
+            this.speed = 9;
+            if (this.isMoving) this.scene.beginAnimation(this.skeleton, this.runRange.from, this.runRange.to, true);
+        }
+
+        return this.isRunning;
+    }
+
+    stopMoving(){
+        this.player.destination = null;
+        if (this.idleRange) this.scene.beginAnimation(this.skeleton, this.idleRange.from, this.idleRange.to, true);
+        this.isMoving = false;
     }
 
     checkMeshToDestroy() {
@@ -140,13 +190,69 @@ export default class Player {
         this.meshToDestroySlider = null;
     }
 
+    addDestroy(pickResult){
+        // Cancel any existing destroy process
+        this.cancelDestroy();
+
+        pickResult.pickedPoint.y = 0;
+        console.log(BABYLON.Vector3.Distance(pickResult.pickedPoint, this.player.position));
+        if (BABYLON.Vector3.Distance(pickResult.pickedPoint, this.player.position) < 20) {
+
+            this.stopMoving();
+            this.lookAtPoint(pickResult.pickedPoint);
+
+            let slider = new GUI.Slider();
+            this.advancedTexture.addControl(slider);
+            slider.minimum = 0;
+            slider.maximum = 100;
+            slider.value = 0;
+            slider.height = "20px";
+            slider.width = "100px";
+            slider.background = "red";
+            slider.color = "green";
+            slider.linkWithMesh(pickResult.pickedMesh);
+
+            pickResult.pickedMesh.destroyParticles = ResourceMesh.createDestroyParticles(pickResult.pickedMesh);
+            ResourceMesh.addOutline(pickResult.pickedMesh);
+
+            this.meshToDestroy = pickResult.pickedMesh;
+            this.meshToDestroySlider = slider;
+        } else {
+
+            // Subtract minimum distance and on arrival start destroying
+            let A = pickResult.pickedPoint.clone();
+            let B = A.clone();
+            B.scaleInPlace(1-(5/A.length()));
+            this.addDestination(B);
+        }
+    }
+
+    handleRunEnergy(){
+        // TODO: Authorize with server...
+        // Drain Energy
+        if (this.isRunning) this.energy -= 0.05;
+        if (this.energy <= 1){
+            this.toggleRun();
+            this.energy = 1.1;
+        }
+
+        // Increase energy
+        if (this.energy < 20){
+            if (!this.isRunning) this.energy += 0.01;
+        }
+    }
+
     move() {
 
         // Player should never be tilted in x or z axis
         this.player.rotation.x = 0;
         this.player.rotation.z = 0;
 
+        // isMoving
         if (this.player.destination) {
+
+            this.handleRunEnergy();
+
             // Cancel
             this.cancelDestroy();
 
@@ -155,11 +261,7 @@ export default class Player {
             if (moveVector.length() > 1.1) {
                 moveVector.y = -0.01;
                 moveVector = moveVector.normalize();
-                moveVector = moveVector.scale(0.2);
-
-                // if(meshFound.distance > 1.1){
-                //     moveVector.y = GRAVITY;
-                // }
+                moveVector = moveVector.scale(1-(1/this.speed));
 
                 this.player.moveWithCollisions(moveVector);
                 this.isMoving = true;

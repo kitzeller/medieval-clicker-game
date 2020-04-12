@@ -30,8 +30,13 @@ export default class Client {
             $('#messages').append($('<li>').text(msg));
         });
 
+        // TODO: Improve messaging system
         socket.on('other player movement', function (msg) {
             others[msg.id].player.addDestination(msg.position);
+        });
+
+        socket.on('other player run', function (msg) {
+            others[msg.id].player.toggleRun();
         });
 
         socket.on('disconnect', function (msg) {

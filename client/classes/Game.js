@@ -12,11 +12,12 @@ export default class Game {
     constructor(canvasId, mesh) {
         // get element from html file.
         const canvas = document.getElementById(canvasId);
+        this.canvas = canvas;
         this.engine = new BABYLON.Engine(canvas, true, {stencil: true});
         this.scene = new BABYLON.Scene(this.engine);
         this.otherPlayers = [];
         this.debug = false;
-        this.hud = this.hudManager();
+        this.hudManager();
         this.ctx = null;
 
         BABYLON.SceneLoader.Append('', `data:${JSON.stringify(mesh.scene)}`, this.scene, scene => {
@@ -105,13 +106,6 @@ export default class Game {
                 // Only allow the ground
                 if (pickResult.pickedMesh.id === "myGround") {
                     this.player.addDestination(pickResult.pickedPoint.clone());
-
-                    if (this.socket) {
-                        this.socket.emit('player movement', {
-                            id: this.socket.id,
-                            position: pickResult.pickedPoint.clone()
-                        });
-                    }
                 } else {
                     // Dont outline ground
                     this.outlineMesh(pickResult.pickedMesh);
@@ -136,6 +130,7 @@ export default class Game {
                     this.player.move();
                 }
 
+                // Handle other players
                 for (let o of this.otherPlayers) {
                     o.move();
                 }
@@ -150,18 +145,20 @@ export default class Game {
             }
 
             this.player.checkMeshToDestroy();
+
+            this.energyBar.width = this.player.energy/100;
         });
 
     }
 
     async addPlayer(socket, pos) {
         this.socket = socket;
-        this.player = new Player(this.scene, this.socket, true);
+        this.player = new Player(this.scene, this.socket, this.advancedTexture, true);
         await this.player.initCharModel(new BABYLON.Vector3(pos.x, 0, pos.z));
     }
 
     async addOtherPlayer(pos) {
-        let other = new Player(this.scene, this.socket);
+        let other = new Player(this.scene, this.socket, this.advancedTexture);
         let m = await other.initCharModel(pos);
         console.log(m);
         this.otherPlayers.push(other);
@@ -171,8 +168,26 @@ export default class Game {
     hudManager() {
         // GUI setup
         this.advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-        var hudComponents = [];
 
+        var button = GUI.Button.CreateImageOnlyButton("but", "assets/textures/run_icon.png");
+        button.width = "40px";
+        button.height = "40px";
+        button.color = "black";
+        button.background = "transparent";
+        button.cornerRadius = 500;
+        // button.left = 600;
+        console.log(this.canvas.height);
+        button.top = this.canvas.height/2.6;
+        this.advancedTexture.addControl(button);
+
+        button.onPointerClickObservable.add( () => {
+            let isRunning = this.player.toggleRun();
+
+            button.background = isRunning? "white" : "transparent";
+
+        });
+
+        // TODO: Move to player? or maybe new PlayerGUI class?
         // Health bar
         var healthBar = new GUI.Rectangle("healthBar");
         healthBar.left = 0;
@@ -183,6 +198,7 @@ export default class Game {
         healthBar.color = "white";
         healthBar.thickness = 4;
         healthBar.background = "red";
+        this.healthBar = healthBar;
         this.advancedTexture.addControl(healthBar);
 
         // Energy Bar
@@ -195,10 +211,9 @@ export default class Game {
         energyBar.color = "white";
         energyBar.thickness = 4;
         energyBar.background = "orange";
+        this.energyBar = energyBar;
         this.advancedTexture.addControl(energyBar);
 
-        hudComponents.push(healthBar, energyBar);
-        return hudComponents;
     }
 
     // TODO: Remove...

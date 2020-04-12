@@ -99,35 +99,8 @@ export default class PanelMenu extends GUI {
                         this.player.addDestination(this.pickResult.pickedPoint.clone());
                         break;
                     case "Destroy":
-                        // TODO: Refactor this out to another class
                         // TODO: Authorize with server
-                        console.log(BABYLON.Vector3.Distance(this.pickResult.pickedPoint, this.player.player.position))
-                        if (BABYLON.Vector3.Distance(this.pickResult.pickedPoint, this.player.player.position) < 20) {
-
-                            // TODO: Fix weird look glitch
-                            this.player.lookAtPoint(this.pickResult.pickedPoint);
-
-                            let slider = new BABYLON.GUI.Slider();
-                            this.advancedTexture.addControl(slider);
-                            slider.minimum = 0;
-                            slider.maximum = 100;
-                            slider.value = 0;
-                            slider.height = "20px";
-                            slider.width = "100px";
-                            slider.background = "red";
-                            slider.color = "green";
-                            slider.linkWithMesh(this.pickResult.pickedMesh);
-
-                            this.pickResult.pickedMesh.destroyParticles = ResourceMesh.createDestroyParticles(this.pickResult.pickedMesh);
-                            ResourceMesh.addOutline(this.pickResult.pickedMesh);
-
-                            this.player.meshToDestroy = this.pickResult.pickedMesh;
-                            this.player.meshToDestroySlider = slider;
-                        } else {
-
-                            // TODO: Subtract minimum distance
-                            this.player.addDestination(this.pickResult.pickedPoint.clone());
-                        }
+                        this.player.addDestroy(this.pickResult);
 
                         break;
                 }
