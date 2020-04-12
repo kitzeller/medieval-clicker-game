@@ -84,10 +84,17 @@ Tree = function (sizeBranch, sizeTrunk, radius, scene, sd) {
     leaves.parent = tree;
     trunk.parent = tree;
 
+    // Convert tree into single entity
+    tree = BABYLON.Mesh.MergeMeshes(tree._children, true, true, undefined, false, true);
+
     tree.metadata = {
         "canDestroy": true,
-        "type": "tree"
+        "type": "wood"
     };
+
+    // Remove
+    leaves.dispose();
+    trunk.dispose();
 
     return tree;
 };

@@ -201,6 +201,7 @@ export default class Game {
         return hudComponents;
     }
 
+    // TODO: Remove...
     outlineMesh(mesh){
         // Outline
         mesh.outlineColor = new BABYLON.Color3(0.3, 0, 0);

@@ -1,5 +1,6 @@
 import * as BABYLON from 'babylonjs';
 import 'babylonjs-loaders';
+import {Inventory} from "./Inventory";
 
 export default class Player {
     constructor(scene, socket, main) {
@@ -8,6 +9,7 @@ export default class Player {
         this.socket = socket;
         this.me = !!main;
         this.isMoving = false;
+        this.inventory = new Inventory();
 
         this.meshToDestroy = null;
         this.meshToDestroySlider = null;
@@ -62,17 +64,17 @@ export default class Player {
     }
 
     addDestination(point) {
-        this.player.destination = new BABYLON.Vector3(point.x, point.y, point.z);
-
+        this.player.destination = new BABYLON.Vector3(point.x, 0, point.z);
+        this.lookAtPoint(this.player.destination);
 
         if (!this.isMoving) {
             this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
         }
 
-        this.lookAt(this.player.destination);
     }
 
-    lookAt(destination) {
+    lookAtPoint(destination) {
+        destination.y = 0;
         this.player.lookAt(destination);
         // Mesh rotation is sligtly off.. need to rotate 180
         this.player.rotate(new BABYLON.Vector3(0, 1, 0), Math.PI, BABYLON.Space.WORLD);
@@ -98,11 +100,33 @@ export default class Player {
 
     checkMeshToDestroy() {
         if (this.meshToDestroy) {
-            this.meshToDestroySlider.value += 0.1;
-            if (this.meshToDestroySlider.value < 50) {
-                // ....
+            this.meshToDestroySlider.value += 0.5;
+            if (this.meshToDestroySlider.value < 100) {
+                return;
             }
+
+            // value > 100
+            // check value and increment inventory
+            console.log(this.meshToDestroy);
+            this.inventory.addItem(this.meshToDestroy.metadata.type)
+            console.log(this.inventory);
+
+            // destroy
+            this.destroy();
         }
+
+    }
+
+    destroy(){
+        // TODO: Refactor so that ResourceMesh contains all this information
+        if (this.meshToDestroy) {
+            if (this.meshToDestroy.destroyParticles) this.meshToDestroy.destroyParticles.stop();
+            this.meshToDestroy.dispose();
+        }
+        this.meshToDestroy = null;
+
+        if (this.meshToDestroySlider) this.meshToDestroySlider.dispose();
+        this.meshToDestroySlider = null;
     }
 
     cancelDestroy() {
@@ -117,6 +141,11 @@ export default class Player {
     }
 
     move() {
+
+        // Player should never be tilted in x or z axis
+        this.player.rotation.x = 0;
+        this.player.rotation.z = 0;
+
         if (this.player.destination) {
             // Cancel
             this.cancelDestroy();

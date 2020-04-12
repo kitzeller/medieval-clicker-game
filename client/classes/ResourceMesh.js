@@ -1,3 +1,5 @@
+import * as BABYLON from "babylonjs";
+
 export class ResourceMesh {
 
     constructor(mesh) {
@@ -6,6 +8,18 @@ export class ResourceMesh {
 
     onDestroy(){
         //...
+    }
+
+    static addOutline(mesh){
+        // Outline
+        mesh.outlineColor = new BABYLON.Color3(0.3, 0, 0);
+        mesh.outlineWidth = 1;
+        mesh.renderOutline = true;
+    }
+
+    static removeOutline(mesh){
+        // Outline
+        mesh.renderOutline = false;
     }
 
     static createDestroyParticles(mesh) {
