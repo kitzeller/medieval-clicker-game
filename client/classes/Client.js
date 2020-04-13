@@ -17,7 +17,7 @@ export default class Client {
         socket.on('scene', async function (mesh) {
             game = new Game('gameCanvas', mesh);
             // Add self
-            await game.addPlayer(socket, mesh.initPos);
+            await game.addPlayer(socket, mesh.initPos, mesh.name);
         });
 
         $('form').submit(function (e) {
@@ -39,10 +39,22 @@ export default class Client {
             others[msg.id].player.toggleRun();
         });
 
+        socket.on('other stop moving', function (msg) {
+            others[msg.id].player.stopMoving();
+        });
+
+        // TODO: Improve this, add particles, etc
+        // TOOD: Decide whether resource meshes are global or by-user
+        socket.on('update destroy mesh', function (msg) {
+            if (game){
+                game.scene.getMeshByID(msg.id).dispose();
+            }
+        });
+
         socket.on('disconnect', function (msg) {
             console.log(others[msg]);
             if (others[msg]){
-                others[msg].mesh.dispose();
+                if (others[msg].mesh) others[msg].mesh.dispose();
                 delete others[msg];
             }
         });
@@ -62,7 +74,7 @@ export default class Client {
                 if (players[id].playerId === socket.id) {
                     // TODO: Nothing?
                 } else {
-                    let playerObj = await game.addOtherPlayer(players[id].position);
+                    let playerObj = await game.addOtherPlayer(players[id].position, players[id].nickname);
                     players[id].player = playerObj;
                     players[id].mesh = playerObj.player;
                 }

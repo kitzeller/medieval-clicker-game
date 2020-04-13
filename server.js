@@ -3,9 +3,11 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io').listen(server);
 const path = require('path');
+require('dotenv').config();
+
 const BABYLON = require('babylonjs');
 const Game = require("./server/Game.js");
-require('dotenv').config();
+const Player = require("./server/Player");
 
 const PORT = process.env.PORT || 8080;
 
@@ -15,6 +17,7 @@ const PORT = process.env.PORT || 8080;
 
 const GAME = Game();
 const players = {};
+const players_v2 = {};
 
 app.use(express.static(__dirname + '/public'));
 
@@ -25,18 +28,22 @@ app.get('/', function (req, res) {
 io.on('connection', function (socket) {
     console.log('a player connected');
     socket.nickname = generateName();
-    players[socket.id] = {
-        playerId: socket.id,
-        nickname: socket.nickname,
-        position: {x: getRandomInt(-25, 25), y: 0, z: getRandomInt(-25, 25)}
-    };
+    // players[socket.id] = {
+    //     playerId: socket.id,
+    //     nickname: socket.nickname,
+    //     position: {x: getRandomInt(-25, 25), y: 0, z: getRandomInt(-25, 25)}
+    // };
+
+    players[socket.id] = new Player(socket.id, socket.nickname, {x: getRandomInt(-25, 25), y: 0, z: getRandomInt(-25, 25)});
 
     socket.emit('scene', {
         scene: BABYLON.SceneSerializer.Serialize(GAME.scene),
-        initPos: players[socket.id].position
+        initPos: players[socket.id].position,
+        name: socket.nickname
     });
 
     // send the players object to the new player
+    console.log(players);
     socket.emit('currentPlayers', players);
     socket.emit('chat message', socket.nickname + " (you) connected ");
 
@@ -54,12 +61,22 @@ io.on('connection', function (socket) {
 
 
     socket.on('player movement', function (msg) {
-        players[msg.id].position = msg.position;
-        socket.broadcast.emit('other player movement', msg);
+        if (players[msg.id]) {
+            players[msg.id].position = msg.position;
+            socket.broadcast.emit('other player movement', msg);
+        }
     });
 
     socket.on('player run', function (msg) {
         socket.broadcast.emit('other player run', msg);
+    });
+
+    socket.on('player stop moving', function (msg) {
+        socket.broadcast.emit('other player stop moving', msg);
+    });
+
+    socket.on('destroy mesh', function (msg) {
+        socket.broadcast.emit('update destroy mesh', msg);
     });
 
     // when a player disconnects, remove them from our players object

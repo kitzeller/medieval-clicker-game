@@ -151,14 +151,15 @@ export default class Game {
 
     }
 
-    async addPlayer(socket, pos) {
+    async addPlayer(socket, pos, name) {
         this.socket = socket;
-        this.player = new Player(this.scene, this.socket, this.advancedTexture, true);
+        this.player = new Player(this.scene, this.socket, this.advancedTexture, name, true);
         await this.player.initCharModel(new BABYLON.Vector3(pos.x, 0, pos.z));
     }
 
-    async addOtherPlayer(pos) {
-        let other = new Player(this.scene, this.socket, this.advancedTexture);
+    async addOtherPlayer(pos, name) {
+        console.log("other name: " +  name);
+        let other = new Player(this.scene, this.socket, this.advancedTexture, name);
         let m = await other.initCharModel(pos);
         console.log(m);
         this.otherPlayers.push(other);

@@ -5,10 +5,15 @@ import {Inventory} from "./Inventory";
 import {ResourceMesh} from "./ResourceMesh";
 
 export default class Player {
-    constructor(scene, socket, at, main) {
+    constructor(scene, socket, at, name, main) {
         var self = this;
         this.scene = scene;
         this.socket = socket;
+        this.id = socket.id;
+        this.name = name;
+
+        console.log("name: " + this.name);
+
         this.me = !!main;
         this.isMoving = false;
         this.isRunning = false;
@@ -43,8 +48,39 @@ export default class Player {
         this.player.ellipsoid = new BABYLON.Vector3(0.5, 1.0, 0.5);
         this.player.ellipsoidOffset = new BABYLON.Vector3(0, 1.0, 0);
 
-        if (this.me) this.scene.activeCamera.lockedTarget = this.player;
+        if (this.me) {
+            this.scene.activeCamera.lockedTarget = this.player;
+
+            // TODO: Replace this with something else?
+            this.scene.activeCamera.targetScreenOffset.y = -10;
+        }
+
         if (position) this.player.position = new BABYLON.Vector3(position.x, position.y, position.z);
+
+
+        // START NAME TAG
+        var writingPlane = BABYLON.MeshBuilder.CreatePlane("plane", {width: 100, height: 20, subdivisions: 25}, this.scene);
+        writingPlane.position.y = 380;
+        writingPlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+        writingPlane.convertToFlatShadedMesh();
+
+        //Create dynamic texture
+        var writingTexture = new BABYLON.DynamicTexture("dynamic texture", {width: 512, height: 128}, this.scene);
+        // var textureContext = textureGround.getContext();
+
+        var writingMaterial = new BABYLON.StandardMaterial("Mat", this.scene);
+        writingMaterial.diffuseTexture = writingTexture;
+        writingMaterial.diffuseTexture.hasAlpha = true;
+        writingMaterial.emissiveColor = new BABYLON.Color3(1,1,1);
+        writingMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+        writingPlane.material = writingMaterial;
+
+        //Add text to dynamic texture
+        var font = "bold 50px monospace";
+        writingTexture.drawText(this.name, 0, 100, font, "yellow", "transparent", true, true);
+        writingPlane.parent = this.player;
+        // END NAME TAG
+
 
         // ROBOT
         this.skeleton.animationPropertiesOverride = new BABYLON.AnimationPropertiesOverride();
@@ -87,7 +123,7 @@ export default class Player {
         this.lookAtPoint(this.player.destination);
 
         if (!this.isMoving) {
-            if (!this.isRunning){
+            if (!this.isRunning) {
                 this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
             } else {
                 this.scene.beginAnimation(this.skeleton, this.runRange.from, this.runRange.to, true);
@@ -121,7 +157,7 @@ export default class Player {
         this.scene.beginAnimation(this.skeleton, this.swordRange.from, this.swordRange.to, false);
     }
 
-    toggleRun(){
+    toggleRun() {
         // Authorize with server
         if (this.socket && this.me) {
             this.socket.emit('player run', {
@@ -129,7 +165,7 @@ export default class Player {
             });
         }
 
-        if (this.isRunning){
+        if (this.isRunning) {
             this.isRunning = false;
             this.speed = 1.5;
             if (this.isMoving) this.scene.beginAnimation(this.skeleton, this.walkRange.from, this.walkRange.to, true);
@@ -142,7 +178,14 @@ export default class Player {
         return this.isRunning;
     }
 
-    stopMoving(){
+    stopMoving() {
+        // Authorize with server
+        if (this.socket && this.me) {
+            this.socket.emit('player stop moving', {
+                id: this.socket.id,
+            });
+        }
+
         this.player.destination = null;
         if (this.idleRange) this.scene.beginAnimation(this.skeleton, this.idleRange.from, this.idleRange.to, true);
         this.isMoving = false;
@@ -167,8 +210,16 @@ export default class Player {
 
     }
 
-    destroy(){
+    destroy() {
         // TODO: Refactor so that ResourceMesh contains all this information
+
+        console.log(this.meshToDestroy);
+        if (this.socket && this.me) {
+            this.socket.emit('destroy mesh', {
+                id: this.meshToDestroy.id,
+            });
+        }
+
         if (this.meshToDestroy) {
             if (this.meshToDestroy.destroyParticles) this.meshToDestroy.destroyParticles.stop();
             this.meshToDestroy.dispose();
@@ -190,7 +241,7 @@ export default class Player {
         this.meshToDestroySlider = null;
     }
 
-    addDestroy(pickResult){
+    addDestroy(pickResult) {
         // Cancel any existing destroy process
         this.cancelDestroy();
 
@@ -222,22 +273,22 @@ export default class Player {
             // Subtract minimum distance and on arrival start destroying
             let A = pickResult.pickedPoint.clone();
             let B = A.clone();
-            B.scaleInPlace(1-(5/A.length()));
+            B.scaleInPlace(1 - (5 / A.length()));
             this.addDestination(B);
         }
     }
 
-    handleRunEnergy(){
+    handleRunEnergy() {
         // TODO: Authorize with server...
         // Drain Energy
         if (this.isRunning) this.energy -= 0.05;
-        if (this.energy <= 1){
+        if (this.energy <= 1) {
             this.toggleRun();
             this.energy = 1.1;
         }
 
         // Increase energy
-        if (this.energy < 20){
+        if (this.energy < 20) {
             if (!this.isRunning) this.energy += 0.01;
         }
     }
@@ -261,7 +312,7 @@ export default class Player {
             if (moveVector.length() > 1.1) {
                 moveVector.y = -0.01;
                 moveVector = moveVector.normalize();
-                moveVector = moveVector.scale(1-(1/this.speed));
+                moveVector = moveVector.scale(1 - (1 / this.speed));
 
                 this.player.moveWithCollisions(moveVector);
                 this.isMoving = true;
